@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Dark theme by default (SPEC section 8, UI rules). */
+:root {
+  --bg: #0b0d10;
+  --fg: #e6e8eb;
+  --muted: #9aa3ad;
+  --line: #2a3038;
+  --up: #22c55e;
+  --down: #ef4444;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+}

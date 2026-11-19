@@ -1,0 +1,6 @@
+Security Code,Issuer Name,Security Id,Security Name,Status,Group,Face Value,ISIN No,Industry,Instrument
+500325,Reliance Industries Ltd,RELIANCE,RELIANCE INDUSTRIES LTD.,Active,A ,10.00,INE002A01018,Refineries,Equity
+500209,Infosys Ltd,INFY,INFOSYS LTD.,Active,A ,5.00,INE009A01021,IT Services,Equity
+543000,BSE Only Ltd,BSEONLY,BSE ONLY LTD.,Suspended,B ,10.00,INE333C01015,Textiles,Equity
+544000,BSE SME Ltd,BSESME,BSE SME LTD.,Active,M ,10.00,INE444D01018,Trading,Equity
+800001,Some Bond,SOMEBOND,SOME BOND 8%,Active,F ,1000.00,INE555E07010,,Debt

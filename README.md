@@ -6,7 +6,8 @@ A personal research app for Indian equities. A factor screen ranks every NSE/BSE
 
 - Spec: [docs/SPEC.md](docs/SPEC.md). Read section 0 first: changes from v1 and the open decisions.
 - Rules for Claude Code: [CLAUDE.md](CLAUDE.md)
-- Build status: Phase 0 (scaffold). Phases 1–7 follow the plan in SPEC section 11.
+- Build status: Phase 1 (data layer) code is in; real data is not loaded yet (see [docs/DATA.md](docs/DATA.md)). Phases 1b–7 follow SPEC section 11.
+- Vendors: [docs/VENDORS.md](docs/VENDORS.md)
 
 ## Requirements
 
@@ -37,7 +38,7 @@ make up      # the stack in the background, waiting until healthy
 make down    # stop the stack; the database volume is kept
 ```
 
-`make ingest`, `make screen`, `make council` and `make nightly` are stubs until their phases land; they exit with an error.
+`make ingest ARGS="<command> ..."` loads data; [docs/DATA.md](docs/DATA.md) lists the steps. `make screen`, `make council` and `make nightly` are stubs until their phases land; they exit with an error.
 
 ## Behind a TLS-intercepting proxy
 

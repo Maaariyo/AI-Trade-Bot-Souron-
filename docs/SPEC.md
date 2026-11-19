@@ -154,6 +154,8 @@ Every stock gets a composite score from 0 to 100, built from factors you weight.
 
 Phase 1 records the number of stocks that pass the price gates here, along with the fundamentals vendor calls that number implies (stocks × endpoints × 4.3 refreshes a month).
 
+**Measured:** not yet. It needs the first real security-master import and price backfill (`docs/DATA.md` steps 1, 3 and 4).
+
 **Factor families and preset weights (0–10)**
 
 | Family | Factors | Better when | Safe | Balanced | Risky |

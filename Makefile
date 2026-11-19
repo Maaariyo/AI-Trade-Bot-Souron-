@@ -67,8 +67,8 @@ fmt: .venv ## Auto-fix lint and formatting
 	uv run ruff check --fix .
 	uv run ruff format .
 
-ingest: ## Security master, prices, fundamentals, filings, news (Phase 1)
-	@echo "make ingest: not implemented yet (Phase 1, docs/SPEC.md section 11)"; exit 1
+ingest: .venv ## Load data: make ingest ARGS="security-master --nse ... " (ARGS=--help lists commands)
+	uv run python -m services.ingest $(if $(ARGS),$(ARGS),--help)
 
 screen: ## Recompute today's factor scores (Phase 2)
 	@echo "make screen: not implemented yet (Phase 2, docs/SPEC.md section 11)"; exit 1

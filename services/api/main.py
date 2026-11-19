@@ -1,4 +1,4 @@
-"""FastAPI application. Phase 0 exposes only /health; routers arrive per phase."""
+"""FastAPI application. Routers arrive per phase."""
 
 from datetime import datetime
 from typing import Literal
@@ -7,10 +7,12 @@ import psycopg
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from services.api.kite import router as kite_router
 from services.config import get_settings
 from services.db import connect
 
 app = FastAPI(title="NiveshCouncil API", version="0.1.0")
+app.include_router(kite_router)
 
 
 class HealthResponse(BaseModel):

@@ -3,12 +3,14 @@
 import os
 import uuid
 from collections.abc import Iterator
+from pathlib import Path
 
 import psycopg
 import pytest
 from psycopg.rows import TupleRow
 
 from services.db import connect
+from services.migrate import apply_migrations
 
 
 @pytest.fixture
@@ -39,3 +41,13 @@ def schema_conn(schema_url: str) -> Iterator[psycopg.Connection[TupleRow]]:
         yield conn
     finally:
         conn.close()
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture
+def db(schema_conn: psycopg.Connection[TupleRow]) -> psycopg.Connection[TupleRow]:
+    """An autocommit connection to a throwaway schema with every migration applied."""
+    apply_migrations(schema_conn)
+    return schema_conn

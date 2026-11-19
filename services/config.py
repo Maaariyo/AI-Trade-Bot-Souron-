@@ -4,6 +4,7 @@ Model IDs, effort levels and budget caps live here, never in agent code
 (CLAUDE.md, "Claude API rules"). Values are the SPEC v2 defaults.
 """
 
+from datetime import time
 from functools import lru_cache
 from typing import Literal
 
@@ -42,6 +43,32 @@ class BudgetConfig(BaseModel):
     per_month_usd: float = Field(default=300.0, gt=0)
 
 
+class KiteConfig(BaseModel):
+    """Kite Connect limits. Values to confirm against Zerodha's docs (docs/VENDORS.md)."""
+
+    token_expiry_ist: time = time(6, 0)
+    historical_requests_per_second: float = Field(default=3.0, gt=0)
+    max_days_per_request: int = Field(default=1900, gt=0)
+    history_years: int = Field(default=5, gt=0)
+    # Kite trading symbols for indices; any not found are reported by `make ingest`.
+    index_codes: list[str] = [
+        "NIFTY 50",
+        "NIFTY 500",
+        "NIFTY BANK",
+        "NIFTY IT",
+        "NIFTY AUTO",
+        "NIFTY FMCG",
+        "NIFTY PHARMA",
+        "NIFTY METAL",
+        "NIFTY REALTY",
+        "NIFTY ENERGY",
+        "NIFTY FIN SERVICE",
+        "NIFTY MEDIA",
+        "NIFTY PSU BANK",
+        "NIFTY PVT BANK",
+    ]
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -60,6 +87,8 @@ class Settings(BaseSettings):
     models: ModelConfig = ModelConfig()
     effort: EffortConfig = EffortConfig()
     budget: BudgetConfig = BudgetConfig()
+    kite: KiteConfig = KiteConfig()
+    news_feeds: list[str] = []
 
 
 @lru_cache

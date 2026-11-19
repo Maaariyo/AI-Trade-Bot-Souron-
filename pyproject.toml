@@ -11,6 +11,8 @@ dependencies = [
     "pydantic-settings>=2.4",
     "psycopg[binary]>=3.2",
     "apscheduler>=3.10,<4",
+    "kiteconnect>=5.2.2",
+    "defusedxml>=0.7.1",
 ]
 
 [dependency-groups]
@@ -19,6 +21,7 @@ dev = [
     "httpx2>=2.16",
     "ruff>=0.6",
     "mypy>=1.11",
+    "types-defusedxml>=0.7.0.20260504",
 ]
 
 [tool.uv]
@@ -39,7 +42,7 @@ packages = ["services", "tests"]
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["apscheduler.*"]
+module = ["apscheduler.*", "kiteconnect", "kiteconnect.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

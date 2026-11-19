@@ -1,0 +1,4 @@
+isin,period_end,period_type,statement,field,value,unit,available_from
+INE002A01018,2026-06-30,Q,PL,revenue,"2,40,000.50",rupees,2026-07-18T16:00:00+05:30
+INE002A01018,2026-06-30,Q,PL,revenue,"2,41,000.00",rupees,2026-09-10T16:00:00+05:30
+INE002A01018,2026-06-30,Q,RATIO,roce,11.2,percent,2026-07-18T16:00:00+05:30

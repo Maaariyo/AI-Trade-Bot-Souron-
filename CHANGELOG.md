@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-19 — Phase 1: data layer (code; real data not loaded yet)
+
+- Migrations 0002–0007: securities and status history, watchlist, broker instruments, daily and index prices (integer paise), corporate actions, benchmark, point-in-time fundamentals (a CHECK enforces `available_from` >= period end), filings, news, broker sessions and alerts.
+- Security master: imports the NSE main, NSE SME and BSE files the owner downloads, merges them by ISIN, marks delistings without deleting rows, and replaces the ASM/GSM lists with GSM taking precedence.
+- Kite Connect: the manual daily login (`/kite/login`, `/kite/callback`, `/kite/status`), tokens kept on the server, rate-limited day candles for stocks and indices, idempotent upserts, and a full re-fetch when Kite re-adjusts past candles.
+- Worker: price update at 18:30 IST on weekdays, retried hourly. It raises an alert when there is no Kite session and records the run as skipped at 23:00. `/alerts` lists open alerts.
+- Corporate actions and total-return maths (unadjusted or split-adjusted prices), the Nifty 500 TRI import with a labelled approximate fallback, the fundamentals store with point-in-time reads and a call-budget calculator, filings storage, and RSS news (defusedxml, headlines and links only) with daily headline digests.
+- Price gates (median traded value >= ₹5 crore over about 3 months, active, not GSM) in `services/factors/gates.py`.
+- `make ingest ARGS="..."` CLI; `docs/DATA.md` (steps to load real data); `docs/VENDORS.md` (bake-off and the D1 recommendation).
+- New dependencies: `kiteconnect`, `defusedxml`.
+
 ## 2026-11-19 — Phase 0: scaffold
 
 - Docker Compose stack with four services: web (Next.js 16, :3000), api (FastAPI, :8000), worker (APScheduler) and db (Postgres 16). Ports bind to localhost only.

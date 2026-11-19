@@ -1,14 +1,18 @@
-"""APScheduler worker. Phase 0 runs only a heartbeat; the nightly pipeline is Phase 6.
+"""APScheduler worker: heartbeat and the nightly price update. Full pipeline: Phase 6.
 
 Run with: python -m services.worker.main
 """
 
 import logging
+from datetime import UTC, datetime
 
 import psycopg
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+from services.config import get_settings
 from services.db import connect
+from services.ingest.kite_auth import make_client
+from services.worker.prices_job import SCHEDULE_HOURS_MINUTES, run_prices
 
 TIMEZONE = "Asia/Kolkata"
 HEARTBEAT_SECONDS = 60
@@ -32,6 +36,21 @@ def heartbeat() -> None:
         log.exception("heartbeat failed: database unavailable")
 
 
+def prices() -> None:
+    try:
+        with connect() as conn:
+            conn.autocommit = True
+            outcome = run_prices(
+                conn,
+                get_settings(),
+                now=datetime.now(UTC),
+                client_factory=lambda s, token: make_client(s, token),
+            )
+        log.info("price job: %s", outcome)
+    except Exception:
+        log.exception("price job crashed")
+
+
 def build_scheduler() -> BlockingScheduler:
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     scheduler.add_job(
@@ -42,6 +61,17 @@ def build_scheduler() -> BlockingScheduler:
         max_instances=1,
         coalesce=True,
     )
+    for hour, minute in SCHEDULE_HOURS_MINUTES:
+        scheduler.add_job(
+            prices,
+            "cron",
+            day_of_week="mon-fri",
+            hour=hour,
+            minute=minute,
+            id=f"prices-{hour:02d}{minute:02d}",
+            max_instances=1,
+            coalesce=True,
+        )
     return scheduler
 
 

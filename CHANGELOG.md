@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-11-25 — Phase 2: factor engine, Screener, Weights Studio
+
+- `services/factors/definitions.yaml`: 27 factors in 7 families, each with a formula, a direction and which stock types it applies to; the canonical fundamentals fields every vendor adapter must map to. `presets.yaml`: the SPEC's Safe, Balanced and Risky weights, default gates and agent weights.
+- Scoring engine (`engine.py`, pure functions):
+  - Gates run in two steps.
+  - Percentiles rank within industry; with fewer than 10 stocks, within sector; then across the whole universe.
+  - Values are winsorised at the 1st and 99th percentiles; ties share the average rank; lower-is-better factors are flipped.
+  - Governance scores 0 or 100 directly.
+  - The composite skips missing factors. Below 70% coverage a stock is marked thin data and left unranked.
+  - Ranking is split from weighting, so a slider move costs about 70 ms on 5,500 stocks and a gate change about 400 ms.
+- Factor computation (`compute.py`):
+  - Prices, the Nifty 500 index and point-in-time fundamentals (`available_from` before the end of the as-of day; historical P/E uses each month-end's public figures).
+  - Bank and NBFC ratios, and governance flags (missing until checked).
+  - Results stored as screen runs.
+- `make screen`; worker job at 23:30 IST; `make ingest ARGS="classification ..."`; securities gain industry, sector and financial type.
+- API: `GET /scores`, `POST /scores/preview` (with move against a baseline), `/presets`, `/profiles`, `POST /screen/run`.
+- Web:
+  - `/screener`: TanStack Table v9 with sorting, search, paging and a passed-gates filter; family heat cells carry ▲ and ▼ as well as colour.
+  - `/weights`: preset buttons, sliders, gates, agent weights, live top 20 with moves and timing, saved profiles, and a run-screen button.
+- Deviation from SPEC, for review: lenders also skip FCF yield, ROCE and interest cover.
+- New dependencies: `numpy`, `pyyaml`, `@tanstack/react-table`.
+
 ## 2026-11-25 — Phase 1b: management guidance; D1 and D5 decided (free options)
 
 - Decisions recorded in `docs/VENDORS.md` and SPEC section 0:

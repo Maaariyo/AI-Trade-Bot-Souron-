@@ -11,8 +11,11 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from services.config import get_settings
 from services.db import connect
+from services.factors.compute import run_screen
 from services.ingest.kite_auth import make_client
+from services.money import ist_date
 from services.worker.prices_job import SCHEDULE_HOURS_MINUTES, run_prices
+from services.worker.runs import finish_run, start_run
 
 TIMEZONE = "Asia/Kolkata"
 HEARTBEAT_SECONDS = 60
@@ -51,6 +54,24 @@ def prices() -> None:
         log.exception("price job crashed")
 
 
+def screen() -> None:
+    """Nightly factor screen at 23:30 IST, after the last price-update attempt."""
+    now = datetime.now(UTC)
+    try:
+        with connect() as conn:
+            conn.autocommit = True
+            run_id = start_run(conn, "screen", at=now)
+            try:
+                run = run_screen(conn, ist_date(now))
+            except Exception as exc:
+                finish_run(conn, run_id, "failed", f"{type(exc).__name__}: {exc}")
+                raise
+            finish_run(conn, run_id, "succeeded", f"run {run.id}: {run.stocks} securities")
+        log.info("screen run %s done", run.id)
+    except Exception:
+        log.exception("screen job crashed")
+
+
 def build_scheduler() -> BlockingScheduler:
     scheduler = BlockingScheduler(timezone=TIMEZONE)
     scheduler.add_job(
@@ -72,6 +93,16 @@ def build_scheduler() -> BlockingScheduler:
             max_instances=1,
             coalesce=True,
         )
+    scheduler.add_job(
+        screen,
+        "cron",
+        day_of_week="mon-fri",
+        hour=23,
+        minute=30,
+        id="screen-2330",
+        max_instances=1,
+        coalesce=True,
+    )
     return scheduler
 
 

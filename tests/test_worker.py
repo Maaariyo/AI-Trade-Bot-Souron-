@@ -19,3 +19,9 @@ def test_price_job_scheduled_weekdays_from_1830_to_2300_ist() -> None:
         "prices-2230",
         "prices-2300",
     ]
+
+
+def test_screen_runs_after_the_last_price_attempt() -> None:
+    job = build_scheduler().get_job("screen-2330")
+    assert job is not None
+    assert "hour='23'" in str(job.trigger) and "minute='30'" in str(job.trigger)

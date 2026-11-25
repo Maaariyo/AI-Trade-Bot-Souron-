@@ -23,6 +23,16 @@ make ingest ARGS="security-master --nse ~/Downloads/EQUITY_L.csv --nse-sme ~/Dow
 - BSE SME stocks are detected by group code, defaulting to `M,MT,MS`. Check that against the real file and override it with `--bse-sme-groups` if needed.
 - Expect about 5,470 active equities. The command prints the counts.
 
+## 1b. Classification (once, then when it changes)
+
+Factor percentiles rank each stock within its industry; small industries fall back to the broader sector. The bank/NBFC factor set needs `financial_type`. The BSE list fills industry and sector when it has those columns. To set or correct them yourself:
+
+```bash
+make ingest ARGS="classification --file classification.csv"   # isin,industry,sector[,financial_type]
+```
+
+`financial_type` (BANK, NBFC or NONE) is derived from the industry text when left blank. An owner classification is never overwritten by a later security-master import.
+
 ## 2. Surveillance lists (weekly)
 
 Download the current GSM and ASM lists from the exchanges, then:
@@ -57,6 +67,15 @@ make ingest ARGS="gates"
 ```
 
 This prints how many stocks pass the price gates and the fundamentals vendor calls a month that number implies. **Write the pass count into SPEC section 5.** It is a Phase 1 done-when item, and it sizes the fundamentals plan.
+
+## 4b. Factor screen
+
+```bash
+make screen                       # today's factors, then the Balanced top 10
+make screen ARGS="--as-of 2026-11-18"
+```
+
+The worker also runs it at 23:30 IST on weekdays. View the result at http://localhost:3000/screener and tune weights at http://localhost:3000/weights. Factors that need fundamentals stay empty until a fundamentals source is loaded (step 6).
 
 ## 5. Benchmark
 

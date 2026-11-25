@@ -15,6 +15,7 @@ from typing import Literal
 import psycopg
 from psycopg.rows import TupleRow
 
+from services.factors.definitions import classify_financial_type
 from services.ingest.csvfiles import parse_date, read_rows
 
 Exchange = Literal["NSE", "BSE"]
@@ -36,6 +37,8 @@ class Listing:
     series: str | None = None
     bse_code: str | None = None
     listed_on: date | None = None
+    industry: str | None = None
+    sector: str | None = None
 
 
 @dataclass
@@ -49,6 +52,8 @@ class MergedSecurity:
     bse_code: str | None = None
     bse_symbol: str | None = None
     listed_on: date | None = None
+    industry: str | None = None
+    sector: str | None = None
     exchanges: set[Exchange] = field(default_factory=set)
 
 
@@ -68,6 +73,8 @@ _BSE_ALIASES = {
     "group": ("GROUP",),
     "isin": ("ISINNO", "ISIN", "ISINNUMBER"),
     "instrument": ("INSTRUMENT",),
+    "industry": ("INDUSTRYNEWNAME", "INDUSTRY", "IGROUPNAME"),
+    "sector": ("SECTORNAME", "SECTOR"),
 }
 
 _BSE_STATUS: dict[str, Status] = {
@@ -117,6 +124,8 @@ def parse_bse_list(
                 status=status,
                 is_sme=r.get("group", "").upper() in sme_groups,
                 bse_code=r["code"],
+                industry=r.get("industry") or None,
+                sector=r.get("sector") or None,
             )
         )
     return out
@@ -137,6 +146,8 @@ def merge_listings(listings: Iterable[Listing]) -> dict[str, MergedSecurity]:
         sec.exchanges.add(lst.exchange)
         sec.is_sme = sec.is_sme or lst.is_sme
         sec.listed_on = sec.listed_on or lst.listed_on
+        sec.industry = sec.industry or lst.industry
+        sec.sector = sec.sector or lst.sector
         if lst.exchange == "NSE":
             sec.nse_symbol, sec.nse_series = lst.symbol, lst.series
         else:
@@ -181,8 +192,9 @@ def upsert_securities(
             conn.execute(
                 """
                 INSERT INTO securities (isin, name, nse_symbol, nse_series, bse_code, bse_symbol,
-                    is_sme, status, listed_on, first_seen, last_seen)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    is_sme, status, listed_on, first_seen, last_seen, industry, sector,
+                    financial_type)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (isin) DO UPDATE SET
                     name = EXCLUDED.name,
                     nse_symbol = EXCLUDED.nse_symbol,
@@ -193,6 +205,11 @@ def upsert_securities(
                     status = EXCLUDED.status,
                     listed_on = COALESCE(securities.listed_on, EXCLUDED.listed_on),
                     last_seen = EXCLUDED.last_seen,
+                    -- an owner classification (make ingest classification) is kept
+                    financial_type = CASE WHEN securities.industry IS NULL
+                        THEN EXCLUDED.financial_type ELSE securities.financial_type END,
+                    industry = COALESCE(securities.industry, EXCLUDED.industry),
+                    sector = COALESCE(securities.sector, EXCLUDED.sector),
                     delisted_detected_on = CASE WHEN EXCLUDED.status = 'DELISTED'
                         THEN COALESCE(securities.delisted_detected_on, EXCLUDED.last_seen)
                         ELSE NULL END,
@@ -210,6 +227,9 @@ def upsert_securities(
                     sec.listed_on,
                     as_of,
                     as_of,
+                    sec.industry,
+                    sec.sector,
+                    classify_financial_type(sec.industry, sec.sector),
                 ),
             )
             before = existing.get(sec.isin)
@@ -376,3 +396,42 @@ def universe_counts(conn: psycopg.Connection[TupleRow]) -> UniverseCounts:
     ).fetchone()
     assert row is not None
     return UniverseCounts(*row)
+
+
+# --- Classification (owner file) -----------------------------------------------------
+
+_CLASS_ALIASES = {
+    "isin": ("ISIN",),
+    "industry": ("INDUSTRY",),
+    "sector": ("SECTOR",),
+    "financial_type": ("FINANCIALTYPE",),
+}
+
+
+def apply_classification(
+    conn: psycopg.Connection[TupleRow], source: Path | str
+) -> tuple[int, list[str]]:
+    """isin,industry,sector[,financial_type] rows overwrite the stored classification.
+
+    financial_type (BANK, NBFC or NONE) is derived from the text when left blank.
+    Returns (rows applied, ISINs not in the security master).
+    """
+    unknown: list[str] = []
+    applied = 0
+    with conn.transaction():
+        for r in read_rows(source, _CLASS_ALIASES, {"isin", "industry", "sector"}):
+            ftype = (r.get("financial_type") or "").upper() or classify_financial_type(
+                r["industry"], r["sector"]
+            )
+            if ftype not in ("NONE", "BANK", "NBFC"):
+                raise ValueError(f"{r['isin']}: financial_type must be NONE, BANK or NBFC")
+            cur = conn.execute(
+                "UPDATE securities SET industry = %s, sector = %s, financial_type = %s, "
+                "updated_at = now() WHERE isin = %s",
+                (r["industry"] or None, r["sector"] or None, ftype, r["isin"].upper()),
+            )
+            if cur.rowcount:
+                applied += 1
+            else:
+                unknown.append(r["isin"])
+    return applied, unknown

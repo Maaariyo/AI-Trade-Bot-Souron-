@@ -73,8 +73,8 @@ ingest: .venv ## Load data: make ingest ARGS="security-master --nse ... " (ARGS=
 guidance: .venv ## Guidance extraction and review: make guidance ARGS="extract --dry-run"
 	uv run python -m services.mgmt_guidance $(if $(ARGS),$(ARGS),--help)
 
-screen: ## Recompute today's factor scores (Phase 2)
-	@echo "make screen: not implemented yet (Phase 2, docs/SPEC.md section 11)"; exit 1
+screen: .venv ## Compute today's factors and print the ranking: make screen ARGS="--as-of 2026-11-18"
+	uv run python -m services.factors $(ARGS)
 
 council: ## One council run: make council ISIN=INE000X01010 (Phase 3)
 	@echo "make council ISIN=$(ISIN): not implemented yet (Phase 3, docs/SPEC.md section 11)"; exit 1

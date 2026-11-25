@@ -13,6 +13,8 @@ dependencies = [
     "apscheduler>=3.10,<4",
     "kiteconnect>=5.2.2",
     "defusedxml>=0.7.1",
+    "anthropic>=2.14.0",
+    "pypdf>=7.1.1",
 ]
 
 [dependency-groups]

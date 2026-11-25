@@ -4,6 +4,18 @@
 
 **How far to trust this:** every finding comes from web-search summaries of the cited pages, not from reading the pages. This build session's network blocked kite.trade and support.zerodha.com. Before paying for anything, open the cited pages yourself and check the rows marked ⚠. Nothing was signed up for or paid for.
 
+## Decision: free options (owner, 25 Nov 2026)
+
+| Job | Choice | Cost | Consequence |
+| --- | --- | --- | --- |
+| Prices and index candles | **Upstox**, read-only Analytics Token | Free | No daily login. The adapter is not built yet: confirm Upstox's API terms and response formats first. Kite stays as the working fallback |
+| Corporate actions | **Upstox** corporate-actions API, keyed by ISIN | Free | Same adapter |
+| Fundamentals | **Upstox** Company Fundamentals API | Free | It has no filing dates, so `available_from` must be estimated from SEBI's results deadlines: 45 days after quarters 1–3, 60 days after the financial year. These rows are flagged as estimated. A company that files late would leak a few days of look-ahead into backtests |
+| Delisted history (D5) | **None** | Free | No free licensed source exists. Every backtest is labelled as carrying survivorship bias |
+| Benchmark | **Approximate TRI** (Nifty 500 price index + dividend yield ÷ 12) | Free | Labelled "approx. TRI" everywhere. Email indices@nse.co.in about the licensed series |
+| Transcripts for Phase 1b | **PDFs you download yourself** from company or exchange sites | Free | Loaded with `make ingest ARGS="transcript ..."` |
+| Guidance extraction (Phase 1b) | **Claude Haiku 5.5 on the Batches API**, plus a free manual path | Under ₹0.25 per transcript; the only paid step | Capped by the budget settings. You can also enter rows by hand at no cost |
+
 ## Scores against the six SPEC criteria
 
 ✓ yes · ◐ partial · ✗ no · ? unknown

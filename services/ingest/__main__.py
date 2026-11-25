@@ -20,7 +20,7 @@ from psycopg.rows import TupleRow
 from services.config import get_settings
 from services.db import connect
 from services.factors.gates import price_gate_results
-from services.ingest import benchmark, corporate_actions, fundamentals, news_cache
+from services.ingest import benchmark, corporate_actions, fundamentals, news_cache, transcripts
 from services.ingest import security_master as sm
 from services.ingest.kite_auth import make_client
 from services.money import ist_date
@@ -131,6 +131,28 @@ def cmd_news(conn: psycopg.Connection[TupleRow], a: argparse.Namespace) -> None:
     print(f"digests built: {news_cache.build_headline_digests(conn, _today())}")
 
 
+def cmd_transcript(conn: psycopg.Connection[TupleRow], a: argparse.Namespace) -> None:
+    if (a.file is None) == (a.url is None):
+        sys.exit("give exactly one of --file or --url")
+    try:
+        pdf = a.file.read_bytes() if a.file else transcripts.fetch_pdf(a.url)
+        result = transcripts.add_document(
+            conn,
+            isin=a.isin.upper(),
+            doc_type=a.type,
+            doc_date=a.date,
+            pdf=pdf,
+            period_label=a.period,
+            source_url=a.url or a.source_url,
+        )
+    except transcripts.DocumentError as exc:
+        sys.exit(f"not stored: {exc}")
+    state = "stored" if result.created else "already stored"
+    print(f"document {result.document_id} {state}: {result.pages} pages")
+    if result.empty_pages:
+        print(f"  {result.empty_pages} page(s) have no text (scanned images are not read)")
+
+
 def cmd_gates(conn: psycopg.Connection[TupleRow], a: argparse.Namespace) -> None:
     results = price_gate_results(conn, as_of=a.as_of)
     passed = sum(r.passed for r in results)
@@ -174,6 +196,18 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--yields", type=Path, required=True, help="year,month,dividend_yield_pct")
     s.add_argument("--index", default="NIFTY 500")
     s.set_defaults(func=cmd_benchmark_approx)
+
+    s = sub.add_parser("transcript", help="store a transcript or presentation PDF (Phase 1b)")
+    s.add_argument("--isin", required=True)
+    s.add_argument("--file", type=Path)
+    s.add_argument("--url", help="one https URL you supply; exchange sites are refused")
+    s.add_argument("--source-url", help="where you downloaded --file from, for the record")
+    s.add_argument(
+        "--type", choices=["TRANSCRIPT", "PRESENTATION", "ANNUAL_REPORT"], default="TRANSCRIPT"
+    )
+    s.add_argument("--date", type=date.fromisoformat, required=True, help="date of the call")
+    s.add_argument("--period", help="period discussed, such as Q2FY27")
+    s.set_defaults(func=cmd_transcript)
 
     sub.add_parser("prices", help="run tonight's price update now").set_defaults(func=cmd_prices)
     sub.add_parser("news", help="poll RSS feeds for the watchlist").set_defaults(func=cmd_news)

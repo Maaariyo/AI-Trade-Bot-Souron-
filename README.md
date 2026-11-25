@@ -6,7 +6,7 @@ A personal research app for Indian equities. A factor screen ranks every NSE/BSE
 
 - Spec: [docs/SPEC.md](docs/SPEC.md). Read section 0 first: changes from v1 and the open decisions.
 - Rules for Claude Code: [CLAUDE.md](CLAUDE.md)
-- Build status: Phase 1 (data layer) code is in; real data is not loaded yet (see [docs/DATA.md](docs/DATA.md)). Phases 1b–7 follow SPEC section 11.
+- Build status: Phases 0, 1, 1b and 2 are built; real data is not loaded yet (see [docs/DATA.md](docs/DATA.md)). Phases 3–7 follow SPEC section 11.
 - Vendors: [docs/VENDORS.md](docs/VENDORS.md) (decided: free options)
 - Management guidance (Phase 1b): [docs/GUIDANCE.md](docs/GUIDANCE.md)
 

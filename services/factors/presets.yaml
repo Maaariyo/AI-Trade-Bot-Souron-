@@ -1,0 +1,49 @@
+# Preset family weights, 0-10 (SPEC section 5 table), default gates (SPEC section 5)
+# and default agent weights, 0-3 (SPEC section 6; advocates vote only if D2 flips).
+
+presets:
+  Slightly Safe:
+    value: 8
+    quality: 9
+    growth: 4
+    momentum: 2
+    risk: 9
+    ownership: 4
+    governance: 10
+  Balanced:
+    value: 6
+    quality: 7
+    growth: 6
+    momentum: 5
+    risk: 5
+    ownership: 4
+    governance: 8
+  Slightly Risky:
+    value: 3
+    quality: 5
+    growth: 9
+    momentum: 9
+    risk: 2
+    ownership: 5
+    governance: 6
+
+default_preset: Balanced
+
+gates:
+  min_median_value_crore: 5      # median daily traded value over about 3 months
+  min_mcap_crore: 500
+  min_quarters: 8
+  exclude_gsm: true
+  exclude_asm: false
+
+agent_weights:
+  deep_reasoner: 1.5
+  news_catalyst: 1
+  company_peers: 1
+  industry_macro: 1
+  management_governance: 1.5
+  risk_on: 1
+  capital_preserver: 1
+
+coverage_min: 0.70        # below this share of available weight: "thin data"
+min_group_size: 10        # rank within industry only if at least this many stocks pass the gates

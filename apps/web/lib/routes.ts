@@ -18,14 +18,14 @@ export const SCREENS: readonly Screen[] = [
   {
     href: "/screener",
     label: "Screener",
-    phase: "Phase 2",
+    phase: "Phase 2 (built)",
     summary:
       "Every stock with its composite score, factor percentiles and gates passed.",
   },
   {
     href: "/weights",
     label: "Weights",
-    phase: "Phase 2",
+    phase: "Phase 2 (built)",
     summary:
       "Factor sliders, presets, gates and agent weights, with a live top-20 preview.",
   },

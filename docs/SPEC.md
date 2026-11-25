@@ -168,7 +168,7 @@ Phase 1 records the number of stocks that pass the price gates here, along with 
 | Ownership | Promoter holding change QoQ, FII + DII change QoQ | Rising | 4 | 4 | 5 |
 | Governance | Auditor resignation, qualified opinion, SEBI order, rating downgrade | None present | 10 | 8 | 6 |
 
-Banks and NBFCs swap in different factors: P/B, GNPA and NNPA, CASA ratio, capital adequacy and credit cost replace EV/EBITDA, debt/equity and CFO/PAT. Governance flags score 0 if present and 100 if clean.
+Banks and NBFCs swap in different factors: P/B, GNPA and NNPA, CASA ratio, capital adequacy and credit cost replace EV/EBITDA, debt/equity and CFO/PAT. Governance flags score 0 if present and 100 if clean. **As built (Phase 2):** lenders also skip FCF yield, ROCE and interest cover, which are meaningless for banks and NBFCs; CASA applies to banks only. A factor with no data for any stock (for example governance, before any checks are loaded) drops out of every stock's weights instead of failing everyone's coverage, and the Screener says which. Full definitions: `services/factors/definitions.yaml`.
 
 **Normalisation.** Rank each factor within its sector. If a sector has fewer than 10 stocks after the gates, rank within its parent industry group instead. Winsorise at the 1st and 99th percentiles, convert to a percentile from 0 to 100, and flip the sign wherever lower is better.
 

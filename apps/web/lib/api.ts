@@ -35,3 +35,33 @@ export async function apiPost(
     };
   }
 }
+
+export async function apiSend<T>(
+  method: "POST" | "PUT",
+  path: string,
+  body: unknown,
+): Promise<{ ok: true; data: T } | { ok: false; detail: string }> {
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { detail?: unknown };
+      const detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail ?? res.status);
+      return { ok: false, detail };
+    }
+    const text = await res.text();
+    return { ok: true, data: (text ? JSON.parse(text) : null) as T };
+  } catch (err) {
+    return {
+      ok: false,
+      detail: err instanceof Error ? err.message : "request failed",
+    };
+  }
+}

@@ -55,6 +55,11 @@ def cmd_security_master(conn: psycopg.Connection[TupleRow], a: argparse.Namespac
     print("SPEC expects about 5,470 active equities.")
 
 
+def cmd_classification(conn: psycopg.Connection[TupleRow], a: argparse.Namespace) -> None:
+    applied, unknown = sm.apply_classification(conn, a.file)
+    print(f"classification applied to {applied} securities; {len(unknown)} unknown ISINs")
+
+
 def cmd_surveillance(conn: psycopg.Connection[TupleRow], a: argparse.Namespace) -> None:
     # GSM first, so a later ASM list cannot downgrade a GSM stock.
     for kind in ("GSM", "ASM"):
@@ -176,6 +181,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--bse", type=Path, required=True)
     s.add_argument("--bse-sme-groups", default=",".join(sorted(sm.DEFAULT_BSE_SME_GROUPS)))
     s.set_defaults(func=cmd_security_master)
+
+    s = sub.add_parser("classification", help="isin,industry,sector[,financial_type] CSV")
+    s.add_argument("--file", type=Path, required=True)
+    s.set_defaults(func=cmd_classification)
 
     s = sub.add_parser("surveillance", help="replace the ASM and/or GSM lists")
     s.add_argument("--gsm", type=Path)

@@ -1,0 +1,183 @@
+# Factor definitions (SPEC section 5). The scoring engine reads this file; the
+# hash of this file is stored on every screen run.
+#
+# direction:  higher | lower   (lower-is-better factors are flipped after ranking)
+# applies_to: all | non_financial | financial | bank
+#             financial = banks and NBFCs (securities.financial_type)
+# normalise:  rank      winsorise at 1st/99th percentile, then percentile 0-100
+#                       within industry (or sector, or universe; see engine.py)
+#             absolute  the value is already a 0-100 score (governance flags)
+#
+# Deviation from SPEC, for review: the SPEC replaces only EV/EBITDA, debt/equity
+# and CFO/PAT for banks and NBFCs. FCF yield, ROCE and interest cover are also
+# left out for them here, because deposits and borrowings are their raw material
+# and those three ratios are meaningless for lenders.
+
+families: [value, quality, growth, momentum, risk, ownership, governance]
+
+factors:
+  # --- Value ---
+  - key: pe_vs_median
+    family: value
+    direction: lower
+    applies_to: all
+    formula: P/E today / median month-end P/E over 5 years (at least 24 months with positive EPS)
+  - key: ev_ebitda
+    family: value
+    direction: lower
+    applies_to: non_financial
+    formula: (market cap + total_debt - cash) / TTM ebitda, positive EBITDA only
+  - key: fcf_yield
+    family: value
+    direction: higher
+    applies_to: non_financial
+    formula: (cfo - capex) of the latest FY / market cap, percent
+  - key: pb
+    family: value
+    direction: lower
+    applies_to: financial
+    formula: market cap / equity (latest), positive equity only
+
+  # --- Quality ---
+  - key: roce
+    family: quality
+    direction: higher
+    applies_to: non_financial
+    formula: ebit / (equity + total_debt), latest FY, percent
+  - key: roe
+    family: quality
+    direction: higher
+    applies_to: all
+    formula: pat / equity, latest FY, percent, positive equity only
+  - key: debt_equity
+    family: quality
+    direction: lower
+    applies_to: non_financial
+    formula: total_debt / equity, latest FY, positive equity only
+  - key: interest_cover
+    family: quality
+    direction: higher
+    applies_to: non_financial
+    formula: ebit / interest, latest FY; capped at 100 (debt-free companies get 100)
+  - key: cfo_pat
+    family: quality
+    direction: higher
+    applies_to: non_financial
+    formula: cfo / pat, latest FY, positive PAT only
+  - key: gnpa
+    family: quality
+    direction: lower
+    applies_to: financial
+    formula: gross NPA percent, latest quarter
+  - key: nnpa
+    family: quality
+    direction: lower
+    applies_to: financial
+    formula: net NPA percent, latest quarter
+  - key: casa
+    family: quality
+    direction: higher
+    applies_to: bank
+    formula: CASA ratio percent, latest quarter (banks only)
+  - key: car
+    family: quality
+    direction: higher
+    applies_to: financial
+    formula: capital adequacy ratio percent, latest quarter
+  - key: credit_cost
+    family: quality
+    direction: lower
+    applies_to: financial
+    formula: credit cost percent, latest FY
+
+  # --- Growth ---
+  - key: revenue_cagr_3y
+    family: growth
+    direction: higher
+    applies_to: all
+    formula: (revenue FY0 / revenue FY-3) ^ (1/3) - 1, percent, both positive
+  - key: eps_cagr_3y
+    family: growth
+    direction: higher
+    applies_to: all
+    formula: (eps FY0 / eps FY-3) ^ (1/3) - 1, percent, both positive
+  - key: revenue_yoy_ttm
+    family: growth
+    direction: higher
+    applies_to: all
+    formula: TTM revenue / TTM revenue a year earlier - 1, percent (needs 8 quarters)
+
+  # --- Momentum ---
+  - key: mom_12_1
+    family: momentum
+    direction: higher
+    applies_to: all
+    formula: close 21 trading days ago / close 252 trading days ago - 1, percent
+  - key: price_vs_200dma
+    family: momentum
+    direction: higher
+    applies_to: all
+    formula: close / 200-day average close - 1, percent
+  - key: rel_strength_12m
+    family: momentum
+    direction: higher
+    applies_to: all
+    formula: 12-month return minus the Nifty 500's 12-month return, percentage points
+
+  # --- Risk ---
+  - key: vol_1y
+    family: risk
+    direction: lower
+    applies_to: all
+    formula: standard deviation of 252 daily log returns x sqrt(252), percent
+  - key: beta_1y
+    family: risk
+    direction: lower
+    applies_to: all
+    formula: covariance with Nifty 500 daily returns / their variance, 252 days
+  - key: max_drawdown_1y
+    family: risk
+    direction: lower
+    applies_to: all
+    formula: largest peak-to-trough fall over 252 days, percent (positive number)
+  - key: pledge_pct
+    family: risk
+    direction: lower
+    applies_to: all
+    formula: promoter shares pledged, percent of promoter holding, latest quarter
+
+  # --- Ownership ---
+  - key: promoter_change_qoq
+    family: ownership
+    direction: higher
+    applies_to: all
+    formula: promoter holding percent, latest quarter minus the quarter before
+  - key: institutional_change_qoq
+    family: ownership
+    direction: higher
+    applies_to: all
+    formula: FII + DII holding percent, latest quarter minus the quarter before
+
+  # --- Governance ---
+  - key: governance_clean
+    family: governance
+    direction: higher
+    applies_to: all
+    normalise: absolute
+    formula: 100 if no governance event in the last 3 years, 0 if any; missing if never checked
+
+# Canonical fundamentals fields. Every vendor adapter maps its own field names to
+# these (fundamentals.field). Money is paise; percentages are percent.
+fields:
+  PL:  [revenue, ebitda, ebit, pat, eps, interest]        # quarterly (Q) and annual (FY)
+  CF:  [cfo, capex]                                         # annual (FY); capex as a positive number
+  BS:  [equity, total_debt, cash, shares_outstanding]       # annual (FY) or latest
+  SHAREHOLDING: [promoter_pct, promoter_pledge_pct, fii_pct, dii_pct]   # quarterly (Q)
+  RATIO: [gnpa_pct, nnpa_pct, casa_pct, car_pct, credit_cost_pct]       # banks and NBFCs
+
+# Text rules for financial_type when the owner hasn't set it. Matched,
+# case-insensitively, against industry then sector. BANK is tried first.
+financial_types:
+  BANK: ["bank"]
+  NBFC: ["nbfc", "non banking", "non-banking", "housing finance", "finance company",
+         "consumer finance", "microfinance"]

@@ -12,6 +12,7 @@ AGENTS = {
     "management_governance",
     "verifier",
     "chair",
+    "guidance_extractor",
 }
 
 

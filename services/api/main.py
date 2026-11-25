@@ -7,12 +7,14 @@ import psycopg
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from services.api.guidance import router as guidance_router
 from services.api.kite import router as kite_router
 from services.config import get_settings
 from services.db import connect
 
 app = FastAPI(title="NiveshCouncil API", version="0.1.0")
 app.include_router(kite_router)
+app.include_router(guidance_router)
 
 
 class HealthResponse(BaseModel):

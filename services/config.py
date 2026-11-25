@@ -34,6 +34,7 @@ class EffortConfig(BaseModel):
     management_governance: Effort = "medium"
     verifier: Effort = "low"
     chair: Effort = "low"
+    guidance_extractor: Effort = "low"
 
 
 class BudgetConfig(BaseModel):
@@ -41,6 +42,36 @@ class BudgetConfig(BaseModel):
 
     per_day_usd: float = Field(default=25.0, gt=0)
     per_month_usd: float = Field(default=300.0, gt=0)
+
+
+class ModelPrice(BaseModel):
+    """US dollars per million tokens, first-party API, standard (not batch) rates."""
+
+    input: float
+    output: float
+    cache_read: float
+    long_context_threshold: int | None = None  # prompts above this use the long rates
+    long_input: float | None = None
+    long_output: float | None = None
+
+
+class PricingConfig(BaseModel):
+    """Claude prices as of Nov 2026 (SPEC section 12). Batches cost 50% of these."""
+
+    batch_discount: float = 0.5
+    cache_write_multiplier: float = 1.25
+    models: dict[str, ModelPrice] = {
+        "claude-opus-5-5": ModelPrice(input=4.0, output=20.0, cache_read=0.20),
+        "claude-sonnet-5-5": ModelPrice(input=2.0, output=10.0, cache_read=0.10),
+        "claude-haiku-5-5": ModelPrice(
+            input=0.10,
+            output=0.50,
+            cache_read=0.01,
+            long_context_threshold=100_000,
+            long_input=0.50,
+            long_output=2.50,
+        ),
+    }
 
 
 class KiteConfig(BaseModel):
@@ -88,6 +119,7 @@ class Settings(BaseSettings):
     effort: EffortConfig = EffortConfig()
     budget: BudgetConfig = BudgetConfig()
     kite: KiteConfig = KiteConfig()
+    pricing: PricingConfig = PricingConfig()
     news_feeds: list[str] = []
 
 

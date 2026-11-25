@@ -19,37 +19,49 @@ export const SCREENS: readonly Screen[] = [
     href: "/screener",
     label: "Screener",
     phase: "Phase 2",
-    summary: "Every stock with its composite score, factor percentiles and gates passed.",
+    summary:
+      "Every stock with its composite score, factor percentiles and gates passed.",
   },
   {
     href: "/weights",
     label: "Weights",
     phase: "Phase 2",
-    summary: "Factor sliders, presets, gates and agent weights, with a live top-20 preview.",
+    summary:
+      "Factor sliders, presets, gates and agent weights, with a live top-20 preview.",
+  },
+  {
+    href: "/guidance",
+    label: "Guidance",
+    phase: "Phase 1b",
+    summary: "Review management targets extracted from transcripts.",
   },
   {
     href: "/runs",
     label: "Runs",
     phase: "Phase 6",
-    summary: "The council queue: status per round, tokens, searches, cost and served model.",
+    summary:
+      "The council queue: status per round, tokens, searches, cost and served model.",
   },
   {
     href: "/track-record",
     label: "Track record",
     phase: "Phase 7",
-    summary: "Council IC against the factor screen on the same dates, by action band, with ablations.",
+    summary:
+      "Council IC against the factor screen on the same dates, by action band, with ablations.",
   },
   {
     href: "/audit",
     label: "Audit",
     phase: "Phase 6",
-    summary: "Read-only audit log: pack and prompt hashes, models, raw outputs, verifier labels.",
+    summary:
+      "Read-only audit log: pack and prompt hashes, models, raw outputs, verifier labels.",
   },
   {
     href: "/settings",
     label: "Settings",
     phase: "Phase 6",
-    summary: "Connect Kite, schedules, budget caps, the kill switch and the mode.",
+    summary:
+      "Connect Kite, schedules, budget caps, the kill switch and the mode.",
   },
 ] as const;
 
@@ -57,7 +69,8 @@ export const STOCK_SCREEN: Screen = {
   href: "/stock/[isin]",
   label: "Stock Council",
   phase: "Phase 5",
-  summary: "One stock: the verdict card, seven assessments, the debate and the evidence.",
+  summary:
+    "One stock: the verdict card, seven assessments, the debate and the evidence.",
 };
 
 export function screenFor(href: string): Screen {

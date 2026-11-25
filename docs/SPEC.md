@@ -29,11 +29,11 @@ Defaults are taken so the build can proceed. Change one before the phase that ne
 
 | # | Decision | Default | Needed by |
 | --- | --- | --- | --- |
-| D1 | Price vendor | Kite Connect with a daily login, unless the Phase 1 bake-off finds a vendor that also covers delisted names, dividends and the TRI | End of Phase 1 |
+| D1 | Price vendor | **Decided 25 Nov 2026: free options.** Upstox for prices, corporate actions and fundamentals; Kite kept as the fallback. See `docs/VENDORS.md` | End of Phase 1 |
 | D2 | Advocates in C | Excluded. Phase 7 tests including them | Phase 5 |
 | D3 | Evaluation date | First trading day of each month | Phase 7 |
 | D4 | Budget caps | $300 a month, $25 a day | Phase 4 |
-| D5 | Source for delisted price history | None chosen. This is a licence question: Claude Code must stop and ask | Phase 1 |
+| D5 | Source for delisted price history | **Decided 25 Nov 2026: none (no free licensed source).** Backtests are labelled as carrying survivorship bias | Phase 1 |
 
 ## 1. Red flags: read before you build
 

@@ -12,7 +12,7 @@ TEST_DATABASE_URL ?= $(DATABASE_URL)
 
 .DEFAULT_GOAL := help
 .PHONY: help deps dev up down logs db-up migrate test test-py test-web lint fmt \
-        ingest screen council nightly
+        ingest guidance screen council nightly
 
 help: ## List the targets
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(firstword $(MAKEFILE_LIST)) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -69,6 +69,9 @@ fmt: .venv ## Auto-fix lint and formatting
 
 ingest: .venv ## Load data: make ingest ARGS="security-master --nse ... " (ARGS=--help lists commands)
 	uv run python -m services.ingest $(if $(ARGS),$(ARGS),--help)
+
+guidance: .venv ## Guidance extraction and review: make guidance ARGS="extract --dry-run"
+	uv run python -m services.mgmt_guidance $(if $(ARGS),$(ARGS),--help)
 
 screen: ## Recompute today's factor scores (Phase 2)
 	@echo "make screen: not implemented yet (Phase 2, docs/SPEC.md section 11)"; exit 1

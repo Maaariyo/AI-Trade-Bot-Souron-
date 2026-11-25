@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-11-25 — Phase 1b: management guidance; D1 and D5 decided (free options)
+
+- Decisions recorded in `docs/VENDORS.md` and SPEC section 0:
+  - D1: Upstox for prices, corporate actions and fundamentals (free); Kite kept as the fallback. The Upstox adapter is not built yet.
+  - D5: no delisted-history source.
+  - Benchmark: the approximate TRI.
+  - Transcripts: PDFs the owner downloads.
+- Migration 0008: documents, per-page text, `llm_usage` (cost ledger), `extraction_runs` (raw outputs kept) and `mgmt_guidance`.
+- `make ingest ARGS="transcript ..."` stores a PDF's text page by page (pypdf). A single owner-supplied URL can be fetched, but never from nseindia.com, bseindia.com, screener.in or moneycontrol.com.
+- Extraction: Claude Haiku 5.5 on the Batches API, with structured outputs, effort set from config, and no forced tool use or sampling parameters. It checks `stop_reason` and records the served model. The budget caps and kill switch are checked before anything is sent (`services/llm/costs.py`).
+- Quote check: a row is QUOTE_VERIFIED only if its quote is found word for word in the stored text and contains the stated target. Otherwise it stays EXTRACTED with a flag. Tested with planted paraphrases and wrong numbers.
+- Review:
+  - API: `/guidance` and `/guidance/stats`, plus approve, reject and manual entry.
+  - Screen: `/guidance` in the web app.
+  - `usable_guidance()` returns only QUOTE_VERIFIED and HUMAN_REVIEWED rows.
+  - Free manual path: `make guidance ARGS="pages ..."` then `add`.
+- `docs/GUIDANCE.md` runbook. New dependencies: `anthropic`, `pypdf`.
+
 ## 2026-11-19 — Phase 1: data layer (code; real data not loaded yet)
 
 - Migrations 0002–0007: securities and status history, watchlist, broker instruments, daily and index prices (integer paise), corporate actions, benchmark, point-in-time fundamentals (a CHECK enforces `available_from` >= period end), filings, news, broker sessions and alerts.
